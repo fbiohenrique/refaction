@@ -1,115 +1,226 @@
 ﻿using System;
 using System.Net;
 using System.Web.Http;
-using refactor_me.Models;
+using refactor_me.Core;
+using refactor_me.Model;
+using System.Collections.Generic;
+using refactor_me.ViewModels;
+using refactor_me.Util;
+using System.Linq;
 
 namespace refactor_me.Controllers
 {
     [RoutePrefix("products")]
-    public class ProductsController : ApiController
+    public class ProductsController : BaseApiController
     {
+        /*****************************************
+         * 
+         *  Fabio Henrique Mendonça Oliveira
+         *  E-mail: henriquefbio@rocketmail.com
+         *  Cel.: 21 256 8228
+         * 
+         *****************************************/
+        #region NEW CODE
+
         [Route]
         [HttpGet]
-        public Products GetAll()
+        public IHttpActionResult GetAll()
         {
-            return new Products();
+            IEnumerable<Product> products = UnitOfWork.ProductDAL.GetAll(true);
+            IEnumerable<ProductVM> productsVM = Mapper.Map<IEnumerable<ProductVM>>(products);
+            return Result(productsVM);
         }
 
         [Route]
         [HttpGet]
-        public Products SearchByName(string name)
+        public IHttpActionResult SearchByName(string name)
         {
-            return new Products(name);
+            IEnumerable<Product> products = UnitOfWork.ProductDAL.SearchByName(name);
+
+            if (products.IsNullOrEmpty())
+                return NotFound();
+
+            IEnumerable<ProductVM> productsVM = Mapper.Map<IEnumerable<ProductVM>>(products);
+            return Result(productsVM);
         }
 
         [Route("{id}")]
         [HttpGet]
-        public Product GetProduct(Guid id)
+        public IHttpActionResult GetProduct(Guid id)
         {
-            var product = new Product(id);
-            if (product.IsNew)
-                throw new HttpResponseException(HttpStatusCode.NotFound);
+            Product product = UnitOfWork.ProductDAL.Find(id);
 
-            return product;
+            if (product == null)
+                return NotFound();
+
+            ProductVM productVM = Mapper.Map<ProductVM>(product);
+
+            return Ok(productVM);
         }
 
         [Route]
         [HttpPost]
-        public void Create(Product product)
+        public IHttpActionResult Create(Product product)
         {
-            product.Save();
+            try
+            {
+                product.Id = Guid.NewGuid();
+
+                if (product.IsValid)
+                {
+                    UnitOfWork.ProductDAL.Insert(product, true);
+                    return Ok();
+                }
+
+                return BadRequest("Invalid Product.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [Route("{id}")]
         [HttpPut]
-        public void Update(Guid id, Product product)
+        public IHttpActionResult Update(Guid id, Product product)
         {
-            var orig = new Product(id)
+            try
             {
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price,
-                DeliveryPrice = product.DeliveryPrice
-            };
+                Product productDb = UnitOfWork.ProductDAL.Find(id);
 
-            if (!orig.IsNew)
-                orig.Save();
+                if (productDb == null)
+                    return NotFound();
+
+                productDb.Name = product.Name;
+                productDb.Description = product.Description;
+                productDb.Price = product.Price;
+                productDb.DeliveryPrice = product.DeliveryPrice;
+
+                if (productDb.IsValid)
+                {
+                    UnitOfWork.ProductDAL.Update(productDb, true);
+                    return Ok();
+                }
+
+                return BadRequest("Invalid Product.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [Route("{id}")]
         [HttpDelete]
-        public void Delete(Guid id)
+        public IHttpActionResult Delete(Guid id)
         {
-            var product = new Product(id);
-            product.Delete();
+            try
+            {
+                UnitOfWork.ProductDAL.Delete(o => o.Id == id, true);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [Route("{productId}/options")]
         [HttpGet]
-        public ProductOptions GetOptions(Guid productId)
+        public IHttpActionResult GetOptions(Guid productId)
         {
-            return new ProductOptions(productId);
+            IEnumerable<ProductOption> productOptions = UnitOfWork.ProductOptionDAL.Get(o => o.ProductId == productId);
+
+            if (productOptions.IsNullOrEmpty())
+                return BadRequest();
+
+            IEnumerable<ProductOptionVM> productOptionsVM = Mapper.Map<IEnumerable<ProductOptionVM>>(productOptions);
+            return Result(productOptionsVM);
         }
 
         [Route("{productId}/options/{id}")]
         [HttpGet]
-        public ProductOption GetOption(Guid productId, Guid id)
+        public IHttpActionResult GetOption(Guid productId, Guid id)
         {
-            var option = new ProductOption(id);
-            if (option.IsNew)
-                throw new HttpResponseException(HttpStatusCode.NotFound);
+            IEnumerable<ProductOption> productOptions = UnitOfWork.ProductOptionDAL.Get(o => o.ProductId == productId);
 
-            return option;
+            if (productOptions.IsNullOrEmpty())
+                return BadRequest();
+
+            IEnumerable<ProductOptionVM> productOptionsVM = Mapper.Map<IEnumerable<ProductOptionVM>>(productOptions);
+            productOptionsVM = productOptionsVM.Where(w => w.Id == id);
+
+            return Result(productOptionsVM);
         }
 
         [Route("{productId}/options")]
         [HttpPost]
-        public void CreateOption(Guid productId, ProductOption option)
+        public IHttpActionResult CreateOption(Guid productId, ProductOption option)
         {
-            option.ProductId = productId;
-            option.Save();
+            try
+            {
+                option.Id = Guid.NewGuid();
+                option.ProductId = productId;
+
+                if (option.IsValid)
+                {
+                    UnitOfWork.ProductOptionDAL.Insert(option, true);
+                    return Ok();
+                }
+
+                return BadRequest("Invalid Option.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [Route("{productId}/options/{id}")]
         [HttpPut]
-        public void UpdateOption(Guid id, ProductOption option)
+        public IHttpActionResult UpdateOption(Guid id, ProductOption option)
         {
-            var orig = new ProductOption(id)
+            try
             {
-                Name = option.Name,
-                Description = option.Description
-            };
+                ProductOption productOptionDb = UnitOfWork.ProductOptionDAL.Find(id);
 
-            if (!orig.IsNew)
-                orig.Save();
+                if (productOptionDb == null)
+                    return NotFound();
+
+                productOptionDb.Name = option.Name;
+                productOptionDb.Description = option.Description;
+
+                if (productOptionDb.IsValid)
+                {
+                    UnitOfWork.ProductOptionDAL.Update(productOptionDb, true);
+                    return Ok();
+                }
+
+                return BadRequest("Invalid Option.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [Route("{productId}/options/{id}")]
         [HttpDelete]
-        public void DeleteOption(Guid id)
+        public IHttpActionResult DeleteOption(Guid id)
         {
-            var opt = new ProductOption(id);
-            opt.Delete();
+            try
+            {
+                UnitOfWork.ProductOptionDAL.Delete(o => o.Id == id, true);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
+
+
+        #endregion
+
     }
 }

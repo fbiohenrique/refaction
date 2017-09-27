@@ -30,7 +30,15 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -40,7 +48,41 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Context\Entities.cs" />
+    <Compile Include="DAL\ProductDAL.cs" />
+    <Compile Include="DAL\ProductOptionDAL.cs" />
+    <Compile Include="EntityConfig\ProductConfiguration.cs" />
+    <Compile Include="EntityConfig\ProductOptionConfiguration.cs" />
+    <Compile Include="Migrations\201709272049118_initialCreate.cs" />
+    <Compile Include="Migrations\201709272049118_initialCreate.Designer.cs">
+      <DependentUpon>201709272049118_initialCreate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Migrations\Seeds\ProductOptionSeed.cs" />
+    <Compile Include="Migrations\Seeds\ProductSeed.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Repository\IRepository.cs" />
+    <Compile Include="Repository\Repository.cs" />
+    <Compile Include="UnitOfWork\UnitOfWork.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\refactor-me.Model\refactor-me.Model.csproj">
+      <Project>{1b9bba23-756a-4a0f-8142-35af77aefd09}</Project>
+      <Name>refactor-me.Model</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\refactor-me.Util\refactor-me.Util.csproj">
+      <Project>{c81f8a85-8110-48c4-a399-7e16f1cedd3b}</Project>
+      <Name>refactor-me.Util</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201709272049118_initialCreate.resx">
+      <DependentUpon>201709272049118_initialCreate.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

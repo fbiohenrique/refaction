@@ -1,4 +1,5 @@
-﻿using System;
+﻿using refactor_me.Mappers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -12,6 +13,7 @@ namespace refactor_me
         protected void Application_Start()
         {
             GlobalConfiguration.Configure(WebApiConfig.Register);
+            AutoMapperConfig.RegisterMappings();
         }
     }
 }
